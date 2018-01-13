@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="Pascal Hertleif">
+  <meta name="dcterms.date" content="2018-02-04">
+  <title>rustfix</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="template/css/reveal.css">
+  <style type="text/css">
+    code{white-space: pre;}
+
+    
+    
+    .reveal a[href^="#"]:visited {
+      color: #8ea9d2;
+    }
+    
+    .reveal p, .slide {
+        line-height: 1.5 !important;
+    }
+  </style>
+  <link rel="stylesheet" href="template/css/theme/solarized.css" id="theme">
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? 'template/css/print/pdf.css' : 'template/css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+  </script>
+  <!--[if lt IE 9]>
+  <script src="template/lib/js/html5shiv.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section>
+  <h1 class="title">rustfix</h1>
+  <p class="subtitle">…and the journey to getting better code automatically</p>
+  <p class="author">Pascal Hertleif</p>
+  <p class="date">2018-02-04</p>
+</section>
+
+<section id="hi-im-pascal-hertleif" class="slide level2">
+<h2>Hi, I’m Pascal Hertleif</h2>
+<ul>
+<li>Web dev &amp; Rust freelancer</li>
+<li>Co-organizer of <a href="http://rust.cologne/">Rust Cologne</a></li>
+<li>{<a href="https://twitter.com/killercup">twitter</a>,<a href="https://github.com/killercup">github</a>}.com/killercup</li>
+<li>Rust-centric blog: <a href="https://deterministic.space/">deterministic.space</a></li>
+</ul>
+<aside class="notes">
+<p>Thanks for the kind introduction!</p>
+<ul>
+<li>I’ve been working with Rust since early 2014</li>
+<li>If you ever happen to be in Cologne, drop by at one of our monthly meetups!</li>
+<li>And with that out of the way, let’s get started!</li>
+</ul>
+</aside>
+</section>
+<section><section id="rust-programmers-like-compiler-errors" class="title-slide slide level1"><h1>Rust programmers like compiler errors</h1></section><section class="slide level2">
+
+<pre><code>error[E0507]: cannot move out of borrowed content
+   --&gt; src/lib.rs:126:29
+    |
+126 |         if let Some(code) = diagnostic.code {
+    |                     ----    ^^^^^^^^^^ cannot move out of borrowed content
+    |                     |
+    |                     hint: to prevent move, use `ref code` or `ref mut code`</code></pre>
+</section><section id="why" class="slide level2">
+<h2>Why?</h2>
+<p>Rust is all about compile-time checks</p>
+<p>But also: Rust’s errors are <em>pretty</em> and <em>helpful</em></p>
+</section><section id="warnings-too" class="slide level2">
+<h2>Warnings, too</h2>
+<ul>
+<li>Lints</li>
+<li><em>Prevent</em> errors</li>
+<li>Examples
+<ul>
+<li>unused <code>Result</code>s or <code>Iterator</code>s</li>
+<li>Missing docs</li>
+</ul></li>
+</ul>
+</section><section id="clippy" class="slide level2">
+<h2>Clippy</h2>
+<p>It looks like you’re enjoying errors. Would you like some more?</p>
+<ul>
+<li>208 lints written by the community</li>
+<li>Find common bugs
+<ul>
+<li>For example: <code>if_same_then_else</code></li>
+</ul></li>
+</ul>
+<aside class="notes">
+<p>Clippy was originally written by Manish Goregaokar but there are a lot of people who contributed to it. Oliver here, for example!</p>
+</aside>
+</section></section>
+<section><section id="lints-as-a-teaching-tool" class="title-slide slide level1"><h1>Lints as a teaching tool</h1></section><section class="slide level2">
+
+<p><code>iter.filter(|x| x == 0).next()</code></p>
+<div class="fragment">
+<p>Did you know about <code>iter.find(|x| x == 0)</code>?</p>
+<aside class="notes">
+<p>Are there any seasoned Rust developers here who know a better way to write this?</p>
+</aside>
+</div>
+</section><section class="slide level2">
+
+<p><code>if !m.contains_key(&amp;k) { m.insert(k, v) }</code></p>
+<div class="fragment">
+<p>Have you heard the good news about the Entry API?</p>
+<p><code>m.entry(k).or_insert(v);</code></p>
+<aside class="notes">
+<p>Okay, you get another chance! How about this code? What would you change?</p>
+<p>The Entry API only needs to compute the hash once!</p>
+</aside>
+</div>
+</section><section class="slide level2">
+
+<ul>
+<li>Learn new APIs when you are <em>almost</em> using them</li>
+<li>Each clippy lint is documented with examples</li>
+</ul>
+<aside class="notes">
+<p>This is really powerful, as you get the chance to learn something very close to when you where thinking about how to solve this problem. So you are not reading a book and much later try to apply you knowledge, but get to learn things by working on your own code.</p>
+</aside>
+</section></section>
+<section><section id="making-this-interactive" class="title-slide slide level1"><h1>Making this interactive</h1></section><section id="suggestions" class="slide level2">
+<h2>Suggestions</h2>
+<pre><code>error: this range is empty so this for loop will never run
+   --&gt; $DIR/for_loop.rs:148:14
+    |
+148 |     for i in 10..0 {
+    |              ^^^^^
+    |
+    = note: `-D reverse-range-loop` implied by `-D warnings`
+help: consider using the following if you are attempting to iterate over this range in reverse
+    |
+148 |     for i in (0..10).rev() {
+    |              ^^^^^^^^^^^^^</code></pre>
+<aside class="notes">
+<p>The compiler can give you suggestions based on your code. Many of these suggestions you can copy and paste to your code</p>
+</aside>
+</section><section id="why-fix-it-yourself" class="slide level2">
+<h2>Why fix it yourself?</h2>
+<p>I’m sold. These suggestions are great. But…</p>
+<ul>
+<li>don’t make me type</li>
+<li>don’t make me wait</li>
+<li>just fix my code already</li>
+</ul>
+</section></section>
+<section><section id="presenting-rustfix" class="title-slide slide level1"><h1>Presenting: rustfix</h1></section><section id="its-already-there" class="slide level2">
+<h2>It’s already there</h2>
+<p>No magic! Just:</p>
+<ul>
+<li>Take existing errors</li>
+<li>Parse the compiler output (JSON)</li>
+<li>Apply suggestions (search &amp; replace)</li>
+</ul>
+<aside class="notes">
+<p>The rustfix tool is really basic. It uses the already existing building blocks. I can’t take any credit for those!</p>
+</aside>
+</section><section id="make-it-interactive-1" class="slide level2">
+<h2>Make it interactive (1)</h2>
+<p>rustfix as CLI tool is interactive</p>
+<ul>
+<li>for each error (that has a suggestion) it
+<ul>
+<li>shows you the error and the fix(es)</li>
+<li>asks what you want to do</li>
+<li>fixes your code</li>
+</ul></li>
+</ul>
+</section><section id="make-it-interactive-2" class="slide level2">
+<h2>Make it interactive (2)</h2>
+<p>You need to manually call the CLI tool</p>
+<p>You do that after working on the code</p>
+<p>We can do better</p>
+</section></section>
+<section><section id="fixes-via-ide" class="title-slide slide level1"><h1>Fixes via IDE</h1></section><section id="rls" class="slide level2">
+<h2>RLS</h2>
+<ul>
+<li>Rust Language Server exposes warnings and suggestions</li>
+<li>VSCode plugin can already apply fixes</li>
+</ul>
+</section></section>
+<section><section id="deep-dive" class="title-slide slide level1"><h1>Deep dive!</h1></section><section id="how-does-this-work" class="slide level2">
+<h2>How does this work?</h2>
+<ul>
+<li>Compiler plugin</li>
+<li>Find nodes and items of interest</li>
+<li>‘Annotate’ spans of code</li>
+<li>Compiler generates human/JSON output</li>
+</ul>
+</section><section id="what-is-auto-fixable" class="slide level2">
+<h2>What is auto-fixable?</h2>
+<ul>
+<li class="fragment">A lot!</li>
+<li class="fragment">Do we need to make a list?</li>
+<li class="fragment">Rust PR <a href="https://github.com/rust-lang/rust/pull/47540">#47540</a> adds flag for “approximate suggestions”</li>
+<li class="fragment">rustfix-like tools will use this in the future</li>
+</ul>
+</section></section>
+<section><section id="thanks" class="title-slide slide level1"><h1>Thanks!</h1></section><section id="you-can-contribute-lints-and-suggestions" class="slide level2">
+<h2>You can contribute lints and suggestions!</h2>
+<p>Search for “Rust Clippy” or go to <a href="https://github.com/rust-lang-nursery/rust-clippy" class="uri">https://github.com/rust-lang-nursery/rust-clippy</a></p>
+<p>There are a lot of issues labelled <em>good first issue</em></p>
+<p>You get to call yourself a compiler hacker!</p>
+</section><section id="any-questions" class="slide level2">
+<h2>Any questions?</h2>
+<p>Visit <a href="https://www.rust-lang.org">rust-lang.org</a></p>
+<p>Follow me on Twitter: <a href="https://twitter.com/killercup">@killercup</a></p>
+<p>Slides available at <a href="https://git.io/fosdem-rustfix">git.io/fosdem-rustfix</a></p>
+</section></section>
+    </div>
+  </div>
+
+  <script src="template/lib/js/head.min.js"></script>
+  <script src="template/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        // Display a presentation progress bar
+        progress: true,
+        // Display the page number of the current slide
+        slideNumber: true,
+        // Push each slide change to the browser history
+        history: true,
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'template/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'template/plugin/zoom-js/zoom.js', async: true },
+              { src: 'template/plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+    </body>
+</html>
