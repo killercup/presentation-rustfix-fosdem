@@ -218,6 +218,56 @@ We can do better
 - Rust Language Server exposes warnings and suggestions
 - VSCode plugin can already apply fixes
 
+---
+
+![](assets/rls-clippy-1.png)
+
+---
+
+![](assets/rls-clippy-2.png)
+
+# Demo
+
+---
+
+> Laptop didn't work?
+>
+> Totally saw that coming.
+>
+> – Past Me
+
+---
+
+![](assets/len0-1.png)
+
+---
+
+![](assets/len0-2.png)
+
+---
+
+![](assets/len0-3.png)
+
+---
+
+![](assets/binop-1.png)
+
+---
+
+![](assets/binop-2.png)
+
+---
+
+![](assets/binop-3.png)
+
+---
+
+![](assets/pi-1.png)
+
+---
+
+![](assets/pi-2.png)
+
 # Deep dive!
 
 ## How does this work?
@@ -233,6 +283,7 @@ We can do better
 > - Do we need to make a list?
 > - Rust PR [#47540] adds flag for "approximate suggestions"
 > - rustfix-like tools will use this in the future
+> - **UPDATE** Merged! 🎉
 
 [#47540]: https://github.com/rust-lang/rust/pull/47540
 
